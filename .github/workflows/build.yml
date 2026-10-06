@@ -1,0 +1,44 @@
+name: Build and verify
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Check dashboard address and helper handshake
+        run: dotnet run --project tests/QuickView.Tests.csproj -c Release
+      - name: Build portable app
+        run: dotnet publish src/UsageMonitorQuickView.csproj -c Release -r win-x64 --self-contained true -o dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: usage-monitor-quickview-win-x64
+          path: dist/UsageMonitorQuickView.exe
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          Copy-Item README.md,LICENSE,CHANGELOG.md dist
+          Copy-Item tools dist\tools -Recurse
+          Get-FileHash dist\UsageMonitorQuickView.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLowerInvariant())  UsageMonitorQuickView.exe" } | Set-Content dist\SHA256SUMS.txt
+          Compress-Archive -Path dist\UsageMonitorQuickView.exe,dist\README.md,dist\LICENSE,dist\CHANGELOG.md,dist\SHA256SUMS.txt,dist\tools -DestinationPath dist\UsageMonitorQuickView-win-x64.zip
+          @'
+          독립 실행되는 Usage Monitor 웹 뷰어입니다. 기존 Codex Account Monitor 위젯 오른쪽에 차트 버튼을 붙이며, 작은 웹 창과 브라우저 열기를 제공합니다. 두 프로그램의 설정과 종료는 별개입니다.
+
+          Download UsageMonitorQuickView.exe for Windows 10/11 x64. Configure your existing dashboard URL; this app does not include a collector. .NET is included; WebView2 Runtime is needed for the embedded window. The ZIP includes documentation and the optional adapter for an existing local encrypted-login/SSH launcher. No signing certificate is included.
+
+          Reuses Codex Account Monitor code and credits Codex Pulse for the original widget concept. Adapted using OpenAI Codex. See README for credits and setup.
+          '@ | Set-Content dist\release-notes.md -Encoding utf8
+          gh release create "$env:GITHUB_REF_NAME" dist\UsageMonitorQuickView.exe dist\UsageMonitorQuickView-win-x64.zip dist\SHA256SUMS.txt --title "Usage Monitor Quick View $env:GITHUB_REF_NAME" --notes-file dist\release-notes.md

@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+dist/
+*.log
+*.user
+settings.json
+settings.local.json
+*.dpapi
+UserData/
+Browser/
+__pycache__/
