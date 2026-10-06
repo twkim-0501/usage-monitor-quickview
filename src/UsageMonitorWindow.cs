@@ -73,7 +73,8 @@ public sealed class UsageMonitorWindow : Window
                 browser.CoreWebView2.DownloadStarting += (_, e) => e.Cancel = true;
                 browser.CoreWebView2.NavigationStarting += (_, e) =>
                 {
-                    if (e.Uri != "about:blank" && (!Uri.TryCreate(e.Uri, UriKind.Absolute, out var target) || target.Scheme is not ("http" or "https"))) e.Cancel = true;
+                    // NavigateToString uses an SDK-owned document address; allow it only for our built-in demo.
+                    if (!demo && e.Uri != "about:blank" && (!Uri.TryCreate(e.Uri, UriKind.Absolute, out var target) || target.Scheme is not ("http" or "https"))) e.Cancel = true;
                 };
             }
             navigation = new(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Allowed the SDK-owned offline document address for the built-in demo.
+- Kept docked and overlay diagnostic captures in separate files.
+
 ## 1.0.0
 
 - Independent taskbar chart button positioned beside Codex Account Monitor when present.

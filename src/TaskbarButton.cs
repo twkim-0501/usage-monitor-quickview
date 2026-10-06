@@ -206,7 +206,7 @@ public sealed class TaskbarButton : IDisposable
             var combinedBounds = Rectangle.FromLTRB(accountRect.Left, Math.Min(accountRect.Top, bounds.Top), bounds.Right, Math.Max(accountRect.Bottom, bounds.Bottom));
             using var combined = new Bitmap(combinedBounds.Width, combinedBounds.Height);
             using (var graphics = Graphics.FromImage(combined)) graphics.CopyFromScreen(combinedBounds.Location, Point.Empty, combinedBounds.Size);
-            combined.Save(Path.Combine(Path.GetDirectoryName(path)!, "combined-taskbar.png"), ImageFormat.Png);
+            combined.Save(Path.Combine(Path.GetDirectoryName(path)!, "combined-" + Path.GetFileName(path)), ImageFormat.Png);
         }
         using var expected = ButtonRenderer.Render(bounds.Size, scale, lightTheme);
         var matches = 0;
